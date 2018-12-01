@@ -2,6 +2,8 @@ module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
 import Browser.Events
+import FormatNumber
+import FormatNumber.Locales
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -29,6 +31,7 @@ type alias ModelData =
     { started : Posix
     , now : Posix
     , offset : Duration
+    , uiTime : Maybe String
     , paused : Bool
     , swarmCount : String
     , swarmProd : String
@@ -79,6 +82,7 @@ initReady t =
     , now = t
     , offset = 0
     , paused = False
+    , uiTime = Nothing
     , swarmCount = "1,2,3"
     , swarmProd = "4,5"
     }
@@ -115,18 +119,18 @@ update msg lmodel =
                     ( ReadyModel { model | now = t }, Cmd.none )
 
                 Pause ->
-                    ( ReadyModel { model | paused = True, offset = model |> elapsed }, Cmd.none )
+                    ( ReadyModel { model | paused = True, offset = model |> elapsed, uiTime = Just ((model |> elapsed |> toFloat) / 1000 |> round 3) }, Cmd.none )
 
                 Resume ->
-                    ( ReadyModel { model | paused = False, started = model.now }, Cmd.none )
+                    ( ReadyModel { model | paused = False, started = model.now, uiTime = Nothing }, Cmd.none )
 
                 SetElapsed str ->
                     case str |> String.toFloat of
                         Nothing ->
-                            ( ReadyModel { model | paused = True }, Cmd.none )
+                            ( ReadyModel { model | paused = True, uiTime = Just str }, Cmd.none )
 
                         Just dur ->
-                            ( ReadyModel { model | paused = True, offset = dur * 1000 |> floor }, Cmd.none )
+                            ( ReadyModel { model | paused = True, uiTime = Just str, offset = dur * 1000 |> floor }, Cmd.none )
 
                 SetSwarmCount str ->
                     ( ReadyModel { model | swarmCount = str }, Cmd.none )
@@ -172,10 +176,10 @@ view lmodel =
 
                 unitDiffError =
                     if unitDiff > 0 then
-                        String.fromInt unitDiff ++ " missing unit production - some unit counts will be ignored" |> Just
+                        formatInt unitDiff ++ " missing unit production - some unit counts will be ignored" |> Just
 
                     else if unitDiff < 0 then
-                        String.fromInt -unitDiff ++ " missing unit count - some production values will be ignored" |> Just
+                        formatInt -unitDiff ++ " missing unit count - some production values will be ignored" |> Just
 
                     else
                         Nothing
@@ -183,9 +187,9 @@ view lmodel =
             div []
                 [ div []
                     [ h1 [] [ text "The math of ", a [ href "https://www.swarmsim.com" ] [ text "Swarm Simulator" ] ]
-                    , p [] [ i [] [ text "2018/12/01: Please don't share this page just yet! I want to add some things before it's shared widely: better number formatting, better layout, visual breakdown of polynomials. Thanks for your patience." ] ]
+                    , p [] [ i [] [ text "2018/12/01: Please don't share this page just yet! I want to add some things before it's shared widely: better large number formatting, visual breakdown of polynomials. Thanks for your patience." ] ]
                     , text "Time (seconds): "
-                    , input [ type_ "number", onInput SetElapsed, value (model |> elapsed |> toFloat |> (*) (1 / 1000) |> round 3) ] []
+                    , input [ type_ "number", onInput SetElapsed, value (model.uiTime |> Maybe.withDefault (model |> elapsed |> toFloat |> (*) (1 / 1000) |> round 3)) ] []
                     , if model.paused then
                         button [ onClick Resume ] [ text "resume" ]
 
@@ -243,24 +247,38 @@ unitNames =
 
 renderUnitName : Int -> String
 renderUnitName tier =
-    unitNames |> List.drop tier |> List.head |> Maybe.withDefault ("Unit T" ++ String.fromInt tier)
+    unitNames |> List.drop tier |> List.head |> Maybe.withDefault ("Unit Tier " ++ formatInt tier)
 
 
 viewProd1 : Duration -> Int -> Int -> Float -> Poly.Polynomial -> Html msg
 viewProd1 t id count prod poly =
     [ id |> renderUnitName
-    , count |> String.fromInt
+    , count |> formatInt
     , if id == 0 then
         ""
 
       else
-        round 0 prod ++ " " ++ renderUnitName (id - 1) ++ "/sec"
-    , poly |> Poly.evaluate (toFloat t / 1000) |> floor |> String.fromInt
-    , "f(t) = " ++ Poly.toString poly
+        formatFloat 2 prod ++ " " ++ renderUnitName (id - 1) ++ "/sec"
+    , poly |> Poly.evaluate (toFloat t / 1000) |> floor |> formatInt
+    , "f(t) = " ++ Poly.format (formatFloat 2) poly
     , formatPoly t poly
     ]
         |> List.map (\cell -> td [] [ text cell ])
         |> tr []
+
+
+formatFloat : Int -> Float -> String
+formatFloat sigfigs =
+    let
+        loc0 =
+            FormatNumber.Locales.usLocale
+    in
+    FormatNumber.format { loc0 | decimals = sigfigs }
+
+
+formatInt : Int -> String
+formatInt =
+    toFloat >> formatFloat 0
 
 
 formatPoly : Duration -> Poly.Polynomial -> String
@@ -270,20 +288,9 @@ formatPoly dur0 poly =
             toFloat dur0 / 1000
     in
     "f("
-        ++ round 2 dur
+        ++ formatFloat 2 dur
         ++ ") = "
-        ++ (poly |> Poly.evaluate dur |> round 2)
-        ++ " = "
-        ++ (poly |> Poly.evaluateTerms dur |> Poly.termsToString)
-
-
-viewPoly : Duration -> Poly.Polynomial -> Html msg
-viewPoly dur0 poly =
-    div []
-        [ div [] [ "Polynomial: " |> text, poly |> Poly.toString |> text ]
-        , div [] [ formatPoly dur0 poly |> text ]
-        , hr [] []
-        ]
+        ++ (poly |> Poly.evaluateTerms dur |> Poly.formatTerms (formatFloat 2))
 
 
 

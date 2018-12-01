@@ -1,6 +1,4 @@
-module Polynomial exposing (Polynomial, evaluate, evaluateTerms, termsToString, toString)
-
-import Round exposing (round)
+module Polynomial exposing (Polynomial, evaluate, evaluateTerms, format, formatTerms, toString)
 
 
 type alias Polynomial =
@@ -21,13 +19,13 @@ evaluateTerms t =
     List.indexedMap eval1
 
 
-termsToString : List Float -> String
-termsToString =
-    List.map (round 2) >> List.reverse >> String.join " + "
+formatTerms : (Float -> String) -> List Float -> String
+formatTerms formatFloat =
+    List.map formatFloat >> List.reverse >> String.join " + "
 
 
-toString : Polynomial -> String
-toString =
+format : (Float -> String) -> Polynomial -> String
+format numFormat =
     let
         degreeToString : Int -> Float -> String
         degreeToString degree term =
@@ -41,6 +39,7 @@ toString =
                             "t"
 
                         _ ->
+                            -- "t^" ++ (degree |> toFloat |> numFormat)
                             "t^" ++ String.fromInt degree
 
                 coeff =
@@ -48,10 +47,15 @@ toString =
                         ""
 
                     else
-                        String.fromFloat term
+                        term |> numFormat
             in
             coeff ++ pow
     in
     List.indexedMap degreeToString
         >> List.reverse
         >> String.join " + "
+
+
+toString : Polynomial -> String
+toString =
+    format String.fromFloat
