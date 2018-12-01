@@ -54,8 +54,7 @@ EOF
 module "webhost" {
   source = "git::ssh://git@gitlab.com/erosson/terraform.git//netlify/gitlab"
   name = "${gitlab_project.git.name}"
-  #custom_domain = "${local.fulldomain}"
-  custom_domain = ""
+  custom_domain = "${local.fulldomain}"
 
   repo {
     repo_branch = "master"
@@ -65,10 +64,10 @@ module "webhost" {
   }
 }
 
-#resource "cloudflare_record" "dns" {
-#  domain  = "${local.hostdomain}"
-#  name    = "${local.project}"
-#  type    = "CNAME"
-#  value   = "${module.webhost.dns}"
-#  proxied = false                   # netlify does its own proxying
-#}
+resource "cloudflare_record" "dns" {
+  domain  = "${local.hostdomain}"
+  name    = "${local.project}"
+  type    = "CNAME"
+  value   = "${module.webhost.dns}"
+  proxied = false                   # netlify does its own proxying
+}
