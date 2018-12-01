@@ -1,0 +1,17 @@
+{
+  "name": "math-swarmsim-com",
+  "version": "1.0.0",
+  "repository": "git@gitlab.com:erosson/math-swarmsim-com.git",
+  "author": "Evan <github@erosson.org>",
+  "license": "GPL-3.0",
+  "private": true,
+  "scripts": {
+    "start": "elm-app start",
+    "build": "elm-app build",
+    "test": "elm-app test",
+    "build:ci": "yarn test && yarn build"
+  },
+  "dependencies": {
+    "create-elm-app": "^2.2.3"
+  }
+}
