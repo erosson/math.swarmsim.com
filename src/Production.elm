@@ -33,7 +33,7 @@ factorial =
             else
                 loop (n * accum) (n - 1)
     in
-    loop 1 >> Debug.log "fact"
+    loop 1
 
 
 toPolynomial : List Int -> List Float -> Polynomial
