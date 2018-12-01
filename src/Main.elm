@@ -161,7 +161,8 @@ view lmodel =
             in
             div []
                 [ div []
-                    [ h1 [] [ text "Swarmsim math" ]
+                    [ h1 [] [ text "The math of ", a [ href "https://www.swarmsim.com" ] [ text "Swarm Simulator" ] ]
+                    , p [] [ i [] [ text "2018/12/01: Please don't share this page just yet! I want to add some things before it's shared widely: better number formatting, better layout, visual breakdown of where the polynomials come from. Thanks for your patience." ] ]
                     , text "Time (seconds): "
                     , input [ type_ "number", onInput SetElapsed, value (model |> elapsed |> toFloat |> (*) (1 / 1000) |> round 3) ] []
                     , if model.paused then
@@ -192,28 +193,25 @@ view lmodel =
 
 viewProd : Duration -> Prod.Units -> Html msg
 viewProd dur units =
-    div []
-        [ table [ class "prod" ]
-            [ thead []
-                [ tr []
-                    [ th [] [ text "Unit" ]
-                    , th [] [ text "Count(0)" ]
-                    , th [] [ text "Production" ]
-                    , th [] [ text "Count(t)" ]
-                    , th [] [ text "Polynomial" ]
-                    , th [] [ text "Evaluation" ]
-                    ]
+    table [ class "prod" ]
+        [ thead []
+            [ tr []
+                [ th [] [ text "Unit" ]
+                , th [] [ text "Count(0)" ]
+                , th [] [ text "Production" ]
+                , th [] [ text "Count(t)" ]
+                , th [] [ text "Polynomial" ]
+                , th [] [ text "Evaluation" ]
                 ]
-            , tbody []
-                (List.map4 (viewProd1 dur)
-                    (units.count |> List.length |> List.range 0)
-                    units.count
-                    (0 :: units.prodEach)
-                    (units |> Prod.toPolynomials)
-                    |> List.reverse
-                )
             ]
-        , hr [] []
+        , tbody []
+            (List.map4 (viewProd1 dur)
+                (units.count |> List.length |> List.range 0)
+                units.count
+                (0 :: units.prodEach)
+                (units |> Prod.toPolynomials)
+                |> List.reverse
+            )
         ]
 
 
