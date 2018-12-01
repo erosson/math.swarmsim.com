@@ -58,6 +58,16 @@ swarmProd =
     .swarmProd >> String.split "," >> List.map String.toFloat >> List.filterMap identity >> List.reverse
 
 
+swarmUnits : ModelData -> Prod.Units
+swarmUnits model =
+    Prod.Units (swarmCount model) (swarmProd model)
+
+
+reify : ModelData -> List Float
+reify model =
+    model |> swarmUnits |> Prod.toPolynomials |> List.map (Poly.evaluate ((elapsed model |> toFloat) / 1000))
+
+
 init : ( Model, Cmd Msg )
 init =
     ( PendingModel, Time.now |> Task.perform Tick )
@@ -85,6 +95,7 @@ type Msg
     | SetElapsed String
     | SetSwarmCount String
     | SetSwarmProd String
+    | Reify
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -123,6 +134,16 @@ update msg lmodel =
                 SetSwarmProd str ->
                     ( ReadyModel { model | swarmProd = str }, Cmd.none )
 
+                Reify ->
+                    ( ReadyModel
+                        { model
+                            | started = model.now
+                            , offset = 0
+                            , swarmCount = model |> reify |> List.reverse |> List.map (floor >> String.fromInt) |> String.join ","
+                        }
+                    , Cmd.none
+                    )
+
 
 subs model =
     Sub.batch [ Browser.Events.onAnimationFrame Tick ]
@@ -144,7 +165,7 @@ view lmodel =
                     model |> elapsed
 
                 units =
-                    Prod.Units (swarmCount model) (swarmProd model)
+                    model |> swarmUnits
 
                 unitDiff =
                     List.length units.count - (List.length units.prodEach + 1)
@@ -162,7 +183,7 @@ view lmodel =
             div []
                 [ div []
                     [ h1 [] [ text "The math of ", a [ href "https://www.swarmsim.com" ] [ text "Swarm Simulator" ] ]
-                    , p [] [ i [] [ text "2018/12/01: Please don't share this page just yet! I want to add some things before it's shared widely: better number formatting, better layout, visual breakdown of where the polynomials come from. Thanks for your patience." ] ]
+                    , p [] [ i [] [ text "2018/12/01: Please don't share this page just yet! I want to add some things before it's shared widely: better number formatting, better layout, visual breakdown of polynomials. Thanks for your patience." ] ]
                     , text "Time (seconds): "
                     , input [ type_ "number", onInput SetElapsed, value (model |> elapsed |> toFloat |> (*) (1 / 1000) |> round 3) ] []
                     , if model.paused then
@@ -181,6 +202,7 @@ view lmodel =
                 , div []
                     [ text "Unit counts: "
                     , input [ type_ "text", onInput SetSwarmCount, value model.swarmCount ] []
+                    , button [ onClick Reify ] [ text "Reify: change count(0) to count(t)" ]
                     ]
                 , div []
                     [ text " Production: "
