@@ -264,7 +264,8 @@ viewProd1 t id count prod poly =
       )
         |> textCell
     , poly |> Poly.evaluate (toFloat t / 1000) |> floor |> formatInt |> textCell
-    , "f(t) = " ++ Poly.format (formatFloat 2) poly |> textCell
+
+    -- , "f(t) = " ++ Poly.format (formatFloat 2) poly |> textCell
     , text "f(t) = " :: viewPoly poly
     , formatPoly t poly |> textCell
     ]
