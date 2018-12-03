@@ -7,6 +7,7 @@ import FormatNumber.Locales
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import NumberSuffix exposing (standardConfig)
 import Polynomial as Poly
 import Production as Prod
 import Round exposing (round)
@@ -269,16 +270,16 @@ viewProd1 t id count prod poly =
 
 formatFloat : Int -> Float -> String
 formatFloat sigfigs =
-    let
-        loc0 =
-            FormatNumber.Locales.usLocale
-    in
-    FormatNumber.format { loc0 | decimals = sigfigs }
+    NumberSuffix.format
+        { standardConfig
+            | sigfigs = sigfigs
+            , getSuffix = NumberSuffix.suffixStandardShort
+        }
 
 
 formatInt : Int -> String
 formatInt =
-    toFloat >> formatFloat 0
+    toFloat >> formatFloat 5
 
 
 formatPoly : Duration -> Poly.Polynomial -> String
@@ -288,9 +289,9 @@ formatPoly dur0 poly =
             toFloat dur0 / 1000
     in
     "f("
-        ++ formatFloat 2 dur
+        ++ formatFloat 4 dur
         ++ ") = "
-        ++ (poly |> Poly.evaluateTerms dur |> Poly.formatTerms (formatFloat 2))
+        ++ (poly |> Poly.evaluateTerms dur |> Poly.formatTerms (formatFloat 3))
 
 
 

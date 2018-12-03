@@ -36,11 +36,11 @@ format numFormat =
                             ""
 
                         1 ->
-                            "t"
+                            " t"
 
                         _ ->
-                            -- "t^" ++ (degree |> toFloat |> numFormat)
-                            "t^" ++ String.fromInt degree
+                            -- " t^" ++ (degree |> toFloat |> numFormat)
+                            " t^" ++ String.fromInt degree
 
                 coeff =
                     if term == 1 && pow /= "" then
