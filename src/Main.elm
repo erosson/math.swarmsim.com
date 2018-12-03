@@ -84,7 +84,7 @@ initReady t =
     , offset = 0
     , paused = False
     , uiTime = Nothing
-    , swarmCount = "1,2,3"
+    , swarmCount = "1000,2,3"
     , swarmProd = "4,5"
     }
 
@@ -188,7 +188,6 @@ view lmodel =
             div []
                 [ div []
                     [ h1 [] [ text "The math of ", a [ href "https://www.swarmsim.com" ] [ text "Swarm Simulator" ] ]
-                    , p [] [ i [] [ text "2018/12/01: Please don't share this page just yet! I want to add some things before it's shared widely: better large number formatting, visual breakdown of polynomials. Thanks for your patience." ] ]
                     , text "Time (seconds): "
                     , input [ type_ "number", onInput SetElapsed, value (model.uiTime |> Maybe.withDefault (model |> elapsed |> toFloat |> (*) (1 / 1000) |> round 3)) ] []
                     , if model.paused then
@@ -198,8 +197,6 @@ view lmodel =
                         button [ onClick Pause ] [ text "pause" ]
                     ]
 
-                --, viewPoly dur [ 1, 2, 3 ]
-                --, viewPoly dur [ 1, 2, 3, 4 ]
                 --, viewProd dur (Prod.Units [ 1, 2, 3, 4 ] [ 4, 5, 6 ])
                 --, viewProd dur (Prod.Units [ 1 ] [])
                 --, viewProd dur (Prod.Units [ 7, 3 ] [ 5 ])
@@ -253,19 +250,48 @@ renderUnitName tier =
 
 viewProd1 : Duration -> Int -> Int -> Float -> Poly.Polynomial -> Html msg
 viewProd1 t id count prod poly =
-    [ id |> renderUnitName
-    , count |> formatInt
-    , if id == 0 then
+    let
+        textCell =
+            text >> List.singleton
+    in
+    [ id |> renderUnitName |> textCell
+    , count |> formatInt |> textCell
+    , (if id == 0 then
         ""
 
-      else
+       else
         formatFloat 2 prod ++ " " ++ renderUnitName (id - 1) ++ "/sec"
-    , poly |> Poly.evaluate (toFloat t / 1000) |> floor |> formatInt
-    , "f(t) = " ++ Poly.format (formatFloat 2) poly
-    , formatPoly t poly
+      )
+        |> textCell
+    , poly |> Poly.evaluate (toFloat t / 1000) |> floor |> formatInt |> textCell
+    , "f(t) = " ++ Poly.format (formatFloat 2) poly |> textCell
+    , text "f(t) = " :: viewPoly poly
+    , formatPoly t poly |> textCell
     ]
-        |> List.map (\cell -> td [] [ text cell ])
+        |> List.map (td [])
         |> tr []
+
+
+viewPoly : Poly.Polynomial -> List (Html msg)
+viewPoly =
+    let
+        render : Int -> String -> Html msg
+        render degree coeff =
+            span []
+                (text coeff
+                    :: (case degree of
+                            0 ->
+                                [ text "" ]
+
+                            1 ->
+                                [ text " t" ]
+
+                            _ ->
+                                [ text " t", sup [] [ text <| String.fromInt degree ] ]
+                       )
+                )
+    in
+    Poly.formatCoefficients (formatFloat 3) >> List.indexedMap render >> List.reverse >> List.intersperse (text " + ")
 
 
 formatFloat : Int -> Float -> String
@@ -289,7 +315,8 @@ formatPoly dur0 poly =
             toFloat dur0 / 1000
     in
     "f("
-        ++ formatFloat 4 dur
+        -- ++ formatFloat 0 dur
+        ++ FormatNumber.format FormatNumber.Locales.usLocale dur
         ++ ") = "
         ++ (poly |> Poly.evaluateTerms dur |> Poly.formatTerms (formatFloat 3))
 
