@@ -67,6 +67,6 @@ toPolynomial counts prodEach =
             ( p, p :: children )
 
         prods =
-            prodEach |> List.foldl foldProd ( 1, [] ) |> Tuple.second |> (::) 1
+            prodEach |> List.foldl foldProd ( 1, [] ) |> Tuple.second |> List.reverse |> (::) 1
     in
     List.map2 (*) facts prods

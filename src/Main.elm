@@ -144,6 +144,7 @@ update msg lmodel =
                         { model
                             | started = model.now
                             , offset = 0
+                            , uiTime = Nothing
                             , swarmCount = model |> reify |> List.reverse |> List.map (floor >> String.fromInt) |> String.join ","
                         }
                     , Cmd.none
