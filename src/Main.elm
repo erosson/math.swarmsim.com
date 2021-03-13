@@ -10,7 +10,7 @@ import Html.Events exposing (..)
 import NumberSuffix exposing (standardConfig)
 import Polynomial as Poly
 import Production as Prod
-import Round exposing (round)
+import Round
 import Task
 import Time exposing (Posix)
 
@@ -120,7 +120,7 @@ update msg lmodel =
                     ( ReadyModel { model | now = t }, Cmd.none )
 
                 Pause ->
-                    ( ReadyModel { model | paused = True, offset = model |> elapsed, uiTime = Just ((model |> elapsed |> toFloat) / 1000 |> round 3) }, Cmd.none )
+                    ( ReadyModel { model | paused = True, offset = model |> elapsed, uiTime = Just ((model |> elapsed |> toFloat) / 1000 |> Round.round 3) }, Cmd.none )
 
                 Resume ->
                     ( ReadyModel { model | paused = False, started = model.now, uiTime = Nothing }, Cmd.none )
@@ -189,7 +189,7 @@ view lmodel =
                 [ div []
                     [ h1 [] [ text "The math of ", a [ href "https://www.swarmsim.com" ] [ text "Swarm Simulator" ] ]
                     , text "Time (seconds): "
-                    , input [ type_ "number", onInput SetElapsed, value (model.uiTime |> Maybe.withDefault (model |> elapsed |> toFloat |> (*) (1 / 1000) |> round 3)) ] []
+                    , input [ type_ "number", onInput SetElapsed, value (model.uiTime |> Maybe.withDefault (model |> elapsed |> toFloat |> (*) (1 / 1000) |> Round.round 3)) ] []
                     , if model.paused then
                         button [ onClick Resume ] [ text "resume" ]
 

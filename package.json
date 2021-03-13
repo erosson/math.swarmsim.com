@@ -11,7 +11,8 @@
     "test": "elm-app test",
     "build:ci": "yarn test && yarn build"
   },
-  "dependencies": {
-    "create-elm-app": "^2.2.3"
+  "dependencies": {},
+  "devDependencies": {
+    "create-elm-app": "^5.22.0"
   }
 }
