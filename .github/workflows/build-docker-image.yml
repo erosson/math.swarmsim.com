@@ -78,7 +78,7 @@ jobs:
           image-names: ${{ env.IMAGE_LABEL }}
           cut-off: 3 days ago UTC
           keep-at-least: 5
-          skip-tags: main
+          skip-tags: master
           account-type: personal
           token: ${{ secrets.GITHUB_TOKEN }}
           token-type: github-token
